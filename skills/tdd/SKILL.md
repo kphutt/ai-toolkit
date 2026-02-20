@@ -1,7 +1,7 @@
 ---
 name: tdd
 description: Strict TDD workflow — red, green, refactor
-user_invocable: true
+user-invocable: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash]
 argument-hint: "<feature-or-function-description>"
 ---

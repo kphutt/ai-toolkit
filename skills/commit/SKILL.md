@@ -1,7 +1,7 @@
 ---
 name: commit
 description: Generate a commit message from staged changes and commit
-user_invocable: true
+user-invocable: true
 allowed-tools: [Bash]
 ---
 

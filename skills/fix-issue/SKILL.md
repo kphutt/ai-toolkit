@@ -1,7 +1,7 @@
 ---
 name: fix-issue
 description: Read a GitHub issue, find relevant code, implement fix, write tests
-user_invocable: true
+user-invocable: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash]
 argument-hint: "<issue-number>"
 ---
