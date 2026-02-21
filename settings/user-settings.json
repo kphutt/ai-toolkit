@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git -C *)",
+      "Bash(git show *)",
+      "Bash(git tag *)",
+      "Bash(git clone *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git checkout *)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)",
+      "Bash(gh release *)",
+      "Bash(gh gist *)",
+      "Bash(gh auth *)",
+      "Bash(go *)",
+      "Bash(python *)",
+      "Bash(npm *)",
+      "Bash(pip *)",
+      "Bash(ls *)",
+      "Bash(diff *)",
+      "Bash(for *)",
+      "Bash(mkdir *)",
+      "Bash(cd *)"
+    ]
+  }
+}
