@@ -38,7 +38,7 @@ Follow the convention from `prompts/project-docs.md`:
   <!-- Prioritized big rocks. This is the backlog. -->
   ```
 - Create `docs/decisions/` directory (empty)
-- Create `docs/design/` directory (empty)
+- Create `docs/design/` directory (brainstorms go here — one per initiative)
 
 ### Step 3: Gitignore essentials
 

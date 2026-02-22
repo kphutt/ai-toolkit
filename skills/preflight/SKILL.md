@@ -1,6 +1,6 @@
 ---
 name: preflight
-description: Pre-push quality checks — secrets, docs, tests, gitignore, cleanup
+description: Pre-push quality checks — secrets, docs, tests, gitignore, cleanup, doc freshness, security
 origin: personal
 user-invocable: true
 allowed-tools: [Read, Grep, Glob, Bash]
@@ -47,6 +47,74 @@ Run each check and record the result as PASS, WARN, or FAIL.
 - Check for uncommitted changes (`git status --porcelain`)
 - **WARN** if TODOs/FIXMEs exist or uncommitted changes remain, **PASS** otherwise
 
+### 6. Doc freshness
+
+Cross-reference project documentation against the actual codebase.
+
+**README.md accuracy:**
+- Read README, identify claims about: directory structure, CLI commands/flags, dependencies, doc paths
+- Cross-reference against reality (ls, manifest files, source code)
+- **FAIL** if references don't match codebase
+
+**CLAUDE.md accuracy:**
+- Read CLAUDE.md, identify claims about: project structure, build/test commands, conventions, dependencies
+- Cross-reference against reality (ls, manifest, source code)
+- **FAIL** if described structure or commands don't match codebase
+
+**ROADMAP.md staleness:**
+- Must exist and be non-empty
+- Count code-file commits since ROADMAP last modified: `git log --oneline --after="$(git log -1 --format=%aI -- ROADMAP.md)" -- '*.go' '*.py' '*.js' '*.ts'`
+- **FAIL** if missing, **WARN** if 5+ code commits since last update
+
+**Decision records (`docs/decisions/`):**
+- Each file must have: `## Status`, `## Context`, `## Decision`, `## Consequences`
+- Filenames must be `NNNN-short-title.md`, numbering sequential with no gaps
+- **FAIL** if missing required sections, **WARN** if numbering gaps
+
+**Initiative brainstorms (`docs/design/*/brainstorm.md`):**
+- Read ROADMAP, identify active (non-struck-through) initiatives
+- Each should have a `docs/design/{initiative}/brainstorm.md`
+- **WARN** if `docs/design/` missing or active initiatives lack brainstorms
+
+**Manifest drift (ai-toolkit only):**
+- Only run this sub-check when the project root contains `environment.md` (i.e., preflight is running inside the ai-toolkit repo)
+- Read `environment.md`, extract all skill names and hook filenames listed in the tables
+- Glob for actual skill directories in `skills/` and hook files in `hooks/`
+- **WARN** if any skill directory or hook file exists in source but is NOT listed in the manifest
+- **WARN** if the manifest lists a skill or hook that doesn't exist in the source directory
+- **PASS** if manifest matches source exactly
+
+Overall result = worst severity across sub-checks.
+
+### 7. Security scan
+
+Quick automated scan for common dangerous patterns across the whole project. Not a full `/security-review` deep-dive.
+
+**Injection patterns:**
+- Grep for string concatenation in SQL queries (missing parameterization)
+- Grep for unsanitized input in shell/subprocess calls (`os.system`, `exec`, `subprocess` with `shell=True`, backtick interpolation)
+- Grep for unescaped user input in HTML templates
+- Grep for user input in file paths without sanitization
+
+**Unsafe function calls:**
+- Language-aware grep for dangerous functions:
+  - Python: `eval(`, `exec(`, `pickle.loads(`, `yaml.load(` (without SafeLoader), `subprocess.call(...shell=True`
+  - Go: `exec.Command` with unsanitized input
+  - JS/TS: `eval(`, `innerHTML =`, `dangerouslySetInnerHTML`, `new Function(`
+
+**Dependency audit:**
+- Run `npm audit --json` / `pip audit` / `go vuln check` if applicable
+- **FAIL** if critical/high vulnerabilities, **WARN** if medium/low
+
+**Severity:**
+- **FAIL** if injection patterns or critical dependency vulns found
+- **WARN** if unsafe function calls or medium dependency vulns found
+- **PASS** if nothing detected
+
+One-line summary with count, e.g.: `[WARN] Security — 2 unsafe eval() calls found`
+
+Note: this is a quick grep-based scan. For thorough review, use `/security-review`.
+
 ## Output Format
 
 Print results in this exact format:
@@ -59,8 +127,10 @@ Preflight Results
 [PASS] Tests — 12 tests passed
 [FAIL] Gitignore — debug.log is tracked
 [WARN] Cleanup — 3 TODOs, 1 FIXME remaining
+[FAIL] Doc freshness — README references non-existent docs/api/ directory
+[WARN] Security — 2 unsafe eval() calls found
 
-Result: 2 pass, 2 warn, 1 fail
+Result: 2 pass, 2 warn, 3 fail
 ```
 
 Use the actual counts and details from each check. Keep descriptions to one line each.

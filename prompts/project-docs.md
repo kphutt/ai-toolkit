@@ -12,7 +12,7 @@ docs/
     0002-short-title.md
   design/
     {initiative}/
-      brainstorm.md                     # optional scratchpad per initiative
+      brainstorm.md                     # required scratchpad per initiative
 ```
 
 ## ROADMAP.md
@@ -50,12 +50,12 @@ What follows from this — good, bad, and neutral.
 
 ## Initiative brainstorms (`docs/design/{name}/brainstorm.md`)
 
-Optional. Create when an initiative needs design exploration before building. Dump sub-tasks, open questions, half-baked ideas, trade-off analysis. Messy by design. When something settles, it graduates to a decision record in `docs/decisions/`.
+Required for every initiative. Dump sub-tasks, open questions, half-baked ideas, trade-off analysis before building. Messy by design. When something settles, it graduates to a decision record in `docs/decisions/`.
 
 ## Lifecycle
 
 ```
-ROADMAP.md item → (optional) brainstorm → decisions → code
+ROADMAP.md item → brainstorm → decisions → code
 ```
 
 ## What NOT to do

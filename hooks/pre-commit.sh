@@ -8,7 +8,13 @@ if [[ "$CLAUDE_TOOL_NAME" != "Bash" ]]; then
 fi
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.command // empty')
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''))" 2>/dev/null || echo "$INPUT" | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''))" 2>/dev/null)
+
+# Remind about preflight before pushing
+if echo "$COMMAND" | grep -q 'git push'; then
+  echo '{"decision":"block","reason":"Have you run /preflight? Run it before pushing, then retry."}' >&2
+  exit 2
+fi
 
 # Only check git commit commands
 if ! echo "$COMMAND" | grep -q 'git commit'; then
