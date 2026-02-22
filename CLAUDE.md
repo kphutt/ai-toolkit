@@ -37,7 +37,11 @@ Instructions for Claude when the skill is invoked.
 ```
 
 Required frontmatter fields: `name`, `description`
-Common optional fields: `user_invocable`, `allowed-tools`, `argument-hint`
+Common optional fields: `user_invocable`, `allowed-tools`, `argument-hint`, `origin`
+
+### Origin
+
+Tag skills with `origin: personal` (built for this toolkit) or `origin: community` (generic/reusable examples). Claude Code ignores unrecognized frontmatter fields — this is purely organizational.
 
 ### Writing Good Skills
 
@@ -60,6 +64,15 @@ Shell scripts in `hooks/`. Each script must:
 3. Use correct exit codes:
    - `0` — success, proceed normally
    - `2` — block the action (PreToolUse only)
+
+### Pre-commit Safety Hook
+
+`hooks/pre-commit.sh` is a PreToolUse hook on Bash that blocks `git commit` when:
+- `.env` or `*.key`/`*.pem` files are staged
+- `debug.log` is staged
+- `--no-verify` flag is used
+
+Runs automatically — no manual invocation needed.
 
 ### Hook Events
 

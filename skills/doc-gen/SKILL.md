@@ -1,6 +1,7 @@
 ---
 name: doc-gen
 description: Generate or update documentation for files or directories
+origin: community
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash]
 argument-hint: "<file-or-directory>"

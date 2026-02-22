@@ -1,6 +1,7 @@
 ---
 name: security-review
 description: Review code for security vulnerabilities with severity ratings and fixes
+origin: community
 user-invocable: true
 allowed-tools: [Read, Grep, Glob, Bash]
 argument-hint: "<file-path, directory, or 'staged'>"

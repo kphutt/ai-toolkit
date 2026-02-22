@@ -1,6 +1,7 @@
 ---
 name: compliment
 description: Give a genuine compliment about the current codebase
+origin: community
 user-invocable: true
 ---
 

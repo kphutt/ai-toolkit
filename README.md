@@ -6,15 +6,27 @@ Personal toolkit for Claude Code extensibility — reusable skills, hooks, MCP s
 
 | Directory | Contents |
 |-----------|----------|
-| `skills/` | 7 invocable skills — code review, commit, doc generation, TDD, security review, issue fixing |
-| `hooks/` | 5 event-driven scripts — auto-formatting, file protection, tool-use logging, context re-injection |
+| `skills/` | 10 invocable skills — bootstrap, preflight, debug logging, code review, TDD, and more |
+| `hooks/` | 6 event-driven scripts — pre-commit safety, auto-formatting, file protection, tool-use logging |
 | `mcp-servers/` | 2 FastMCP servers — project context (git status, TODOs, branch info) and a reference example |
 | `agents/` | 2 Agent SDK definitions — doc generator and file summarizer |
 | `prompts/` | Reusable prompt templates for common workflows |
 
 ## Skills
 
-Invoked via `/skillname` in Claude Code:
+Invoked via `/skillname` in Claude Code.
+
+### Personal
+
+Built for this toolkit — opinionated workflows for CLI/TUI projects:
+
+- `/bootstrap` — Interactive new-project setup (debug logging, docs, gitignore, CLAUDE.md)
+- `/preflight` — Pre-push quality checks (secrets, docs, tests, gitignore, cleanup)
+- `/add-debug-logging` — Add a `--debug` flag and structured file logging
+
+### Community
+
+Generic reusable skills:
 
 - `/code-review` — Review code for bugs, clarity, edge cases, and security
 - `/commit` — Generate a commit message from staged changes and commit
@@ -28,6 +40,7 @@ Invoked via `/skillname` in Claude Code:
 
 Run automatically in response to Claude Code events:
 
+- **pre-commit.sh** — Blocks commits with staged secrets (.env, .key, .pem), debug.log, or --no-verify
 - **auto-format.sh** — Formats files after Write/Edit (black, prettier, gofmt, rustfmt)
 - **protect-files.sh** — Blocks writes to .env, .pem, .key, and credentials files
 - **log-tool-use.sh** — Logs all tool calls to `~/.claude/tool-use.log`

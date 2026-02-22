@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: Review code for bugs, clarity, edge cases, and security issues
+origin: community
 user-invocable: true
 allowed-tools: [Read, Grep, Glob, Bash]
 argument-hint: "<file-path, PR number, or 'staged'>"

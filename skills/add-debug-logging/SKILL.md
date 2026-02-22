@@ -1,6 +1,7 @@
 ---
 name: add-debug-logging
 description: Add a --debug flag and structured file logging to the current project
+origin: personal
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash]
 argument-hint: "[entry-point file]"
