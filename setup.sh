@@ -1,3 +1,3 @@
 #!/bin/bash
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-python "$SCRIPT_DIR/setup.py" "$@" 2>/dev/null || python3 "$SCRIPT_DIR/setup.py" "$@"
+# Convenience wrapper — delegates to setup.py
+exec python "$(dirname "$0")/setup.py" "$@" 2>/dev/null || exec python3 "$(dirname "$0")/setup.py" "$@"

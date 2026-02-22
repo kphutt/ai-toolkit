@@ -124,8 +124,9 @@ The toolkit uses symlinks to install skills and hooks into `~/.claude/`. This me
 ### Key files
 
 - **`environment.md`** — Manifest declaring which skills, hooks, and settings.json entries should be installed. Single source of truth.
-- **`setup.py`** — Core setup logic (Python). Handles cross-platform link creation, JSON state file, settings.json merge. Dry-run by default, `--apply` to execute. Supports `--uninstall` and `--detach`.
-- **`setup.sh`** — Thin wrapper that calls `setup.py`. Exists for convenience (`bash setup.sh` still works).
+- **`setup.py`** — Core setup logic (Python). Handles cross-platform link creation, JSON state file, settings.json merge. Dry-run by default, `--apply` to execute. Supports `--uninstall` and `--detach`. Hook registrations are parsed from `environment.md`'s JSON block (not hardcoded).
+- **`setup.sh`** — One-line wrapper that calls `setup.py`.
+- **`tests/test_setup.py`** — Invariant tests (8 tests, `python tests/test_setup.py`).
 - **`/sync-env`** — Claude Code skill that reads the manifest, reports current state, and offers to fix missing symlinks/settings entries.
 
 ### Safety invariant
