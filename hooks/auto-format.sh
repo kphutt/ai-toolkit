@@ -1,7 +1,14 @@
 #!/bin/bash
 # Auto-format files after Write/Edit tool calls.
 # Hook type: PostToolUse
-# Runs the appropriate formatter based on file extension.
+#
+# Detect the file extension and run the first available formatter:
+#   .py          → black, ruff
+#   .js/ts/css/… → prettier
+#   .go          → gofmt
+#   .rs          → rustfmt
+#
+# Best-effort: silently skips if no formatter is installed. Always exits 0.
 
 # Only run after Write or Edit
 if [[ "$CLAUDE_TOOL_NAME" != "Write" && "$CLAUDE_TOOL_NAME" != "Edit" ]]; then
