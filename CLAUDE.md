@@ -117,6 +117,29 @@ Agent definitions live in `agents/<name>/`. Each has a `README.md` describing pu
 
 All repos follow the standard in [prompts/project-docs.md](prompts/project-docs.md): `ROADMAP.md` for big rocks, `docs/decisions/` for decision records, `docs/design/{initiative}/brainstorm.md` for optional design exploration.
 
+## Environment Management
+
+The toolkit uses symlinks to install skills and hooks into `~/.claude/`. This means `git pull` updates everything immediately — no re-copying needed.
+
+### Key files
+
+- **`environment.md`** — Manifest declaring which skills, hooks, and settings.json entries should be installed. Single source of truth.
+- **`setup.py`** — Core setup logic (Python). Handles cross-platform link creation, JSON state file, settings.json merge. Dry-run by default, `--apply` to execute. Supports `--uninstall` and `--detach`.
+- **`setup.sh`** — Thin wrapper that calls `setup.py`. Exists for convenience (`bash setup.sh` still works).
+- **`/sync-env`** — Claude Code skill that reads the manifest, reports current state, and offers to fix missing symlinks/settings entries.
+
+### Safety invariant
+
+setup.py never modifies, overwrites, or deletes anything it didn't create. All destructive operations go through guard functions (`is_managed`, `safe_remove`, `safe_link`) that verify targets are toolkit-managed links before acting. Regular files and non-toolkit links are always skipped.
+
+### Workflow
+
+- New machine: `git clone <repo> ~/dev/ai-toolkit && bash setup.sh --apply`
+- Updates: `git pull` (symlinks pick up changes)
+- Review state: `bash setup.sh` (dry-run) or `/sync-env` in Claude Code
+- Clean removal: `bash setup.sh --uninstall --apply`
+- Freeze copies: `bash setup.sh --detach --apply`
+
 ## Style
 
 - Keep instructions concise — no filler, no motivation speeches
