@@ -113,24 +113,17 @@ Quick automated scan for common dangerous patterns across the whole project. Not
 
 One-line summary with count, e.g.: `[WARN] Security — 2 unsafe eval() calls found`
 
-Note: this is a quick grep-based scan. For thorough review, use `/security-review`.
-
 ## Output Format
-
-Print results in this exact format:
 
 ```
 Preflight Results
 =================
 [PASS] Secrets — no hardcoded secrets found
 [WARN] Docs — 2 public functions missing docstrings
-[PASS] Tests — 12 tests passed
 [FAIL] Gitignore — debug.log is tracked
-[WARN] Cleanup — 3 TODOs, 1 FIXME remaining
-[FAIL] Doc freshness — README references non-existent docs/api/ directory
 [WARN] Security — 2 unsafe eval() calls found
 
-Result: 2 pass, 2 warn, 3 fail
+Result: 1 pass, 2 warn, 1 fail
 ```
 
-Use the actual counts and details from each check. Keep descriptions to one line each.
+One line per check. Use actual counts and details.

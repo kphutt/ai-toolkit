@@ -30,25 +30,13 @@ Sync the ai-toolkit environment manifest to `~/.claude/`. Check the state of all
      - Present in settings.json → **CURRENT**
      - Missing → **MISSING**
 
-6. **Show report** in this format:
+6. **Show report** — one line per item:
    ```
    Environment Sync Report
    =======================
-   Source: ~/dev/ai-toolkit
-
-   Skills:
-     CURRENT  add-debug-logging -> ~/dev/ai-toolkit/skills/add-debug-logging
-     CURRENT  bootstrap -> ~/dev/ai-toolkit/skills/bootstrap
-     MISSING  sync-env
-     LOCAL    preflight (regular file — not managed)
-
-   Hooks:
-     CURRENT  auto-format.sh -> ~/dev/ai-toolkit/hooks/auto-format.sh
-     MISSING  pre-commit.sh
-
-   Settings.json:
-     CURRENT  PreToolUse: bash ~/.claude/hooks/protect-files.sh
-     MISSING  PostToolUse: bash ~/.claude/hooks/log-tool-use.sh
+   Skills:   CURRENT add-debug-logging | MISSING sync-env | LOCAL preflight
+   Hooks:    CURRENT auto-format.py | MISSING pre-commit.py
+   Settings: CURRENT PreToolUse:protect-files.py | MISSING PostToolUse:log-tool-use.py
 
    Summary: 8 current, 2 missing, 1 local
    ```

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""AI Toolkit setup — install/uninstall/detach skills and hooks via links.
+"""AI Toolkit setup — install/uninstall skills and hooks via links.
 
+Never modifies or deletes files not created by us.
 Dry-run by default. Use --apply to make changes.
 """
 
@@ -52,8 +53,7 @@ def _detect_strategy():
         src.write_text("test")
         try:
             lnk.symlink_to(src)
-            if lnk.resolve() == src.resolve():
-                return
+            return  # symlinks work
         except OSError:
             pass
         if sys.platform == "win32":
@@ -105,16 +105,16 @@ def _state_remove(state: dict, target: str):
     state["entries"] = [e for e in state["entries"] if e["target"] != target]
 
 
-def _state_source(state: dict, target: str) -> str | None:
-    return next((e["source"] for e in state["entries"] if e["target"] == target), None)
-
-
 # ---------------------------------------------------------------------------
 # Link operations
 # ---------------------------------------------------------------------------
 
 def _is_junction(target: Path) -> bool:
-    """Detect Windows junctions that is_symlink() misses."""
+    """Detect Windows junctions that is_symlink() misses.
+
+    Python's is_symlink() returns False for NTFS junctions, but os.readlink()
+    successfully reads them — so we use that as the detection mechanism.
+    """
     if sys.platform != "win32":
         return False
     try:
@@ -131,6 +131,8 @@ def _is_link(target: Path) -> bool:
 
 
 def create_link(source: Path, target: Path, is_dir: bool, state: dict):
+    """Create a link from target → source, recording it in state."""
+    target.parent.mkdir(parents=True, exist_ok=True)
     if STRATEGY == "symlink":
         target.symlink_to(source, target_is_directory=is_dir)
         _state_add(state, "symlink", str(target), str(source))
@@ -146,16 +148,15 @@ def create_link(source: Path, target: Path, is_dir: bool, state: dict):
 
 
 def remove_link(target: Path):
+    """Remove a link or regular file/dir. Handles Windows junction removal."""
     if _is_link(target):
         if target.is_dir():
+            # Windows junctions must be removed with rmdir, not unlink
             try:
                 os.rmdir(target)
             except OSError:
-                try:
-                    subprocess.run(["cmd", "/c", "rmdir", str(target)],
-                                   capture_output=True, check=True)
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    target.unlink(missing_ok=True)
+                subprocess.run(["cmd", "/c", "rmdir", str(target)],
+                               capture_output=True, check=True)
         else:
             target.unlink()
     elif target.is_dir():
@@ -188,7 +189,6 @@ def parse_manifest() -> tuple[list, list, dict]:
     skills, hooks = [], []
     settings_hooks = {}
 
-    # Parse markdown tables in one pass
     current_table = None
     for line in text.splitlines():
         s = line.strip()
@@ -203,7 +203,7 @@ def parse_manifest() -> tuple[list, list, dict]:
         if current_table and s.startswith("|"):
             parts = [p.strip() for p in s.strip("|").split("|")]
             name = parts[0].strip()
-            install = parts[1].strip().lower().startswith("yes") if len(parts) >= 2 else False
+            install = parts[1].strip().lower().startswith("yes")
             if current_table == "skills":
                 skills.append((name, install))
             else:
@@ -211,7 +211,6 @@ def parse_manifest() -> tuple[list, list, dict]:
         elif current_table and not s.startswith("|"):
             current_table = None
 
-    # Extract settings.json hook registrations from ```json block
     m = re.search(r"```json\s*\n(.*?)```", text, re.DOTALL)
     if m:
         try:
@@ -227,7 +226,8 @@ def parse_manifest() -> tuple[list, list, dict]:
 # Settings.json merge
 # ---------------------------------------------------------------------------
 
-MANAGED_HOOK_RE = re.compile(r"^bash ~/\.claude/hooks/\S+\.sh$")
+# Matches only toolkit-managed hook commands (both old bash and new python forms)
+MANAGED_HOOK_RE = re.compile(r"^(bash|python3?) ~/\.claude/hooks/\S+\.(sh|py)$")
 
 
 def _merge_settings(mode: str, expected_hooks: dict, dry_run: bool):
@@ -246,11 +246,17 @@ def _merge_settings(mode: str, expected_hooks: dict, dry_run: bool):
     changed = False
     if mode == "install":
         settings.setdefault("hooks", {})
+        # Each event (PreToolUse, PostToolUse) maps to a list of entries,
+        # where each entry has a "hooks" array of {type, command} objects.
         for event, entries in expected_hooks.items():
             settings["hooks"].setdefault(event, [])
             existing = {h.get("command", "") for e in settings["hooks"][event] for h in e.get("hooks", [])}
             for entry in entries:
                 cmd = entry["hooks"][0]["command"]
+                # On Windows, rewrite python3 → python (python3 may not exist)
+                if sys.platform == "win32":
+                    cmd = cmd.replace("python3 ", "python ")
+                    entry = json.loads(json.dumps(entry).replace("python3 ", "python "))
                 if cmd in existing:
                     print(f"  CURRENT: {event}:{cmd}")
                 else:
@@ -291,6 +297,7 @@ def _merge_settings(mode: str, expected_hooks: dict, dry_run: bool):
 # ---------------------------------------------------------------------------
 
 def safe_link(source: Path, target: Path, is_dir: bool, state: dict, dry_run: bool):
+    """Create a link only if target is absent or already managed. Never touches local files."""
     name = target.name
 
     if _is_link(target):
@@ -309,8 +316,7 @@ def safe_link(source: Path, target: Path, is_dir: bool, state: dict, dry_run: bo
         return
 
     # Regular file/dir not in state → LOCAL (not ours, don't touch)
-    exists = (target.is_dir() if is_dir else target.is_file())
-    if exists and not _state_has(state, str(target)):
+    if (target.is_dir() if is_dir else target.is_file()) and not _state_has(state, str(target)):
         kind = "directory" if is_dir else "file"
         print(f"  LOCAL: {name} (regular {kind} — not managed)")
         return
@@ -329,6 +335,7 @@ def safe_link(source: Path, target: Path, is_dir: bool, state: dict, dry_run: bo
 
 
 def safe_remove(target: Path, state: dict, dry_run: bool) -> bool:
+    """Remove target only if it was created by us. Returns True if removed."""
     if not is_managed(target, state):
         print(f"  SKIP (not managed): {target.name}")
         return False
@@ -365,8 +372,6 @@ def do_install(skills, hooks, expected_hooks, state, dry_run):
         if not src.is_file():
             print(f"  WARNING: source not found: {src}")
             continue
-        if not dry_run and not os.access(src, os.X_OK):
-            src.chmod(src.stat().st_mode | 0o111)
         safe_link(src, tgt, is_dir=False, state=state, dry_run=dry_run)
     print()
 
@@ -375,8 +380,8 @@ def do_install(skills, hooks, expected_hooks, state, dry_run):
     print()
 
 
-def _iter_managed(subdir: str, state, dry_run):
-    """Yield (entry_path,) for managed items in a target subdirectory."""
+def _iter_managed(subdir: str):
+    """Yield entry paths in a target subdirectory."""
     d = TARGET_DIR / subdir
     if not d.is_dir():
         return
@@ -387,7 +392,7 @@ def _iter_managed(subdir: str, state, dry_run):
 def do_uninstall(state, dry_run, expected_hooks):
     for label, subdir in [("Skills:", "skills"), ("Hooks:", "hooks")]:
         print(label)
-        for entry in _iter_managed(subdir, state, dry_run):
+        for entry in _iter_managed(subdir):
             safe_remove(entry, state, dry_run)
         print()
 
@@ -401,61 +406,16 @@ def do_uninstall(state, dry_run, expected_hooks):
         print(f"Uninstall complete. Source repo at {TOOLKIT_DIR} still exists.")
 
 
-def do_detach(state, dry_run):
-    for label, subdir, copyfn in [
-        ("Skills:", "skills", lambda s, t: shutil.copytree(s, str(t))),
-        ("Hooks:", "hooks", lambda s, t: shutil.copy2(s, str(t))),
-    ]:
-        print(label)
-        d = TARGET_DIR / subdir
-        if not d.is_dir():
-            print()
-            continue
-        for entry in sorted(d.iterdir()):
-            if not is_managed(entry, state):
-                print(f"  SKIP (not managed): {entry.name}")
-                continue
-            source = None
-            if _is_link(entry):
-                try:
-                    source = str(entry.resolve())
-                except OSError:
-                    pass
-            source = source or _state_source(state, str(entry))
-            if not source or not Path(source).exists():
-                print(f"  WARNING: cannot find source for {entry.name} — skipping")
-                continue
-            if dry_run:
-                print(f"  [dry-run] would detach: {entry.name}")
-            else:
-                remove_link(entry)
-                copyfn(source, entry)
-                _state_remove(state, str(entry))
-                print(f"  DETACHED: {entry.name} (now a regular copy)")
-        print()
-
-    print("Settings.json: left as-is (hook registrations still work with regular files).")
-    if not state["entries"] and not dry_run:
-        STATE_FILE.unlink(missing_ok=True)
-    if not dry_run:
-        print()
-        print("Detached. Skills and hooks are now regular files.")
-        print(f"Safe to remove {TOOLKIT_DIR}.")
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description="AI Toolkit setup")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--uninstall", action="store_true")
-    group.add_argument("--detach", action="store_true")
+    parser.add_argument("--uninstall", action="store_true")
     parser.add_argument("--apply", action="store_true", help="Make changes (default is dry-run)")
     args = parser.parse_args()
 
-    mode = "detach" if args.detach else ("uninstall" if args.uninstall else "install")
     dry_run = not args.apply
 
     print(f"\nAI Toolkit Setup ({'dry run' if dry_run else 'apply'})")
@@ -465,28 +425,20 @@ def main():
         print(f"ERROR: Manifest not found: {MANIFEST}")
         sys.exit(1)
 
-    if not TARGET_DIR.is_dir():
-        if not dry_run:
-            TARGET_DIR.mkdir(parents=True, exist_ok=True)
+    if not TARGET_DIR.is_dir() and not dry_run:
+        TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
     _detect_strategy()
     if STRATEGY == "windows":
         print("Note: Using junctions + hard links (symlinks not available).\n")
 
-    for sub in ("skills", "hooks"):
-        d = TARGET_DIR / sub
-        if not d.is_dir() and not dry_run:
-            d.mkdir(parents=True, exist_ok=True)
-
     skills, hooks, expected_hooks = parse_manifest()
     state = _state_load()
 
-    if mode == "install":
-        do_install(skills, hooks, expected_hooks, state, dry_run)
-    elif mode == "uninstall":
+    if args.uninstall:
         do_uninstall(state, dry_run, expected_hooks)
-    elif mode == "detach":
-        do_detach(state, dry_run)
+    else:
+        do_install(skills, hooks, expected_hooks, state, dry_run)
 
     if not dry_run:
         if state["entries"]:

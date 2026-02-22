@@ -26,7 +26,7 @@ def make_toolkit(path: Path):
     (path / "skills" / "test-skill").mkdir(parents=True)
     (path / "skills" / "test-skill" / "SKILL.md").write_text("test skill content")
     (path / "hooks").mkdir(parents=True)
-    (path / "hooks" / "test-hook.sh").write_text("#!/bin/bash\necho test")
+    (path / "hooks" / "test-hook.py").write_text("#!/usr/bin/env python3\nimport sys; sys.exit(0)")
     shutil.copy(str(SETUP_PY), str(path / "setup.py"))
     (path / "environment.md").write_text("""\
 # Environment Manifest
@@ -37,13 +37,13 @@ def make_toolkit(path: Path):
 ## Hooks
 | File | Install | Event | Matcher |
 |------|---------|-------|---------|
-| test-hook.sh | yes | PostToolUse | _(none)_ |
+| test-hook.py | yes | PostToolUse | _(none)_ |
 ## Settings.json Hook Registrations
 ```json
 {
   "hooks": {
     "PostToolUse": [
-      {"hooks": [{"type": "command", "command": "bash ~/.claude/hooks/test-hook.sh"}]}
+      {"hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/test-hook.py"}]}
     ]
   }
 }
@@ -132,51 +132,33 @@ class TestSetup(unittest.TestCase):
         run_setup(self.toolkit, self.tmp, "--apply")
 
         skill = self.home_path("skills", "test-skill")
-        hook = self.home_path("hooks", "test-hook.sh")
+        hook = self.home_path("hooks", "test-hook.py")
         self.assertTrue(skill.is_dir(), "Skill link not created")
         self.assertTrue((skill / "SKILL.md").exists(), "Skill content not accessible")
         self.assertTrue(hook.exists(), "Hook link not created")
 
     # -- Test 3: Uninstall removes managed, preserves unmanaged --
 
-    def test_uninstall_selective(self):
+    def test_uninstall_removes_managed_preserves_user(self):
         run_setup(self.toolkit, self.tmp, "--apply")
 
         # Create unmanaged items
         custom_skill = self.home_path("skills", "custom-skill")
         custom_skill.mkdir(parents=True)
         (custom_skill / "SKILL.md").write_text("custom")
-        custom_hook = self.home_path("hooks", "custom-hook.sh")
+        custom_hook = self.home_path("hooks", "custom-hook.py")
         custom_hook.write_text("custom hook")
 
         run_setup(self.toolkit, self.tmp, "--uninstall", "--apply")
 
         self.assertFalse(self.home_path("skills", "test-skill").exists(),
                          "Managed skill not removed")
-        self.assertFalse(self.home_path("hooks", "test-hook.sh").exists(),
+        self.assertFalse(self.home_path("hooks", "test-hook.py").exists(),
                          "Managed hook not removed")
         self.assertTrue(custom_skill.is_dir(), "Unmanaged skill removed")
         self.assertTrue(custom_hook.is_file(), "Unmanaged hook removed")
 
-    # -- Test 4: Detach converts links to regular copies --
-
-    def test_detach(self):
-        # Create unmanaged item
-        custom_skill = self.home_path("skills", "custom-skill")
-        custom_skill.mkdir(parents=True)
-        (custom_skill / "SKILL.md").write_text("custom content")
-
-        run_setup(self.toolkit, self.tmp, "--apply")
-        run_setup(self.toolkit, self.tmp, "--detach", "--apply")
-
-        skill = self.home_path("skills", "test-skill")
-        self.assertTrue(skill.is_dir(), "Skill missing after detach")
-        self.assertTrue((skill / "SKILL.md").exists(), "Skill content missing after detach")
-        self.assertFalse(skill.is_symlink(), "Skill still a symlink after detach")
-        self.assertFalse(_looks_like_junction(skill), "Skill still a junction after detach")
-        self.assertEqual((custom_skill / "SKILL.md").read_text(), "custom content")
-
-    # -- Test 5: settings.json install preserves custom entries --
+    # -- Test 4: settings.json install preserves custom entries --
 
     def test_settings_install_preserves_custom(self):
         settings = self.home_path("settings.json")
@@ -188,7 +170,7 @@ class TestSetup(unittest.TestCase):
         self.assertEqual(d["customKey"], "customValue")
         self.assertEqual(d["permissions"]["allow"], ["Bash(git *)"])
 
-    # -- Test 6: settings.json uninstall preserves custom hooks --
+    # -- Test 5: settings.json uninstall preserves custom hooks --
 
     def test_settings_uninstall_preserves_custom_hooks(self):
         settings = self.home_path("settings.json")
@@ -196,8 +178,8 @@ class TestSetup(unittest.TestCase):
             "permissions": {"allow": []},
             "hooks": {
                 "PostToolUse": [
-                    {"hooks": [{"type": "command", "command": "bash ~/.claude/hooks/test-hook.sh"}]},
-                    {"matcher": "Bash", "hooks": [{"type": "command", "command": "bash /my/custom/hook.sh"}]},
+                    {"hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/test-hook.py"}]},
+                    {"matcher": "Bash", "hooks": [{"type": "command", "command": "python3 /my/custom/hook.py"}]},
                 ]
             }
         }))
@@ -206,15 +188,17 @@ class TestSetup(unittest.TestCase):
 
         d = json.loads(settings.read_text())
         hooks = d.get("hooks", {}).get("PostToolUse", [])
+        # Nested comprehension: for each entry in the event's list, extract
+        # the "command" field from each hook object in that entry's hooks array.
         commands = [h.get("command", "") for e in hooks for h in e.get("hooks", [])]
-        self.assertIn("bash /my/custom/hook.sh", commands)
-        self.assertNotIn("bash ~/.claude/hooks/test-hook.sh", commands)
+        self.assertIn("python3 /my/custom/hook.py", commands)
+        self.assertNotIn("python3 ~/.claude/hooks/test-hook.py", commands)
 
-    # -- Test 7: Non-managed files are never removed --
+    # -- Test 6: Non-managed files are never removed --
 
     def test_guard_refuses_non_managed(self):
         """Verify that uninstall doesn't remove files it didn't create."""
-        precious = self.home_path("hooks", "precious.sh")
+        precious = self.home_path("hooks", "precious.py")
         precious.write_text("precious data")
 
         run_setup(self.toolkit, self.tmp, "--uninstall", "--apply")
@@ -222,7 +206,7 @@ class TestSetup(unittest.TestCase):
         self.assertTrue(precious.is_file(), "Non-managed file was deleted")
         self.assertEqual(precious.read_text(), "precious data")
 
-    # -- Test 8: Dry-run changes nothing --
+    # -- Test 7: Dry-run changes nothing --
 
     def test_dry_run_no_changes(self):
         claude = self.tmp / ".claude"
@@ -239,6 +223,34 @@ class TestSetup(unittest.TestCase):
                 after[str(f)] = f.read_bytes()
 
         self.assertEqual(before, after, "Dry-run modified files")
+
+    # -- Test 8: Round-trip install → uninstall → install --
+
+    def test_round_trip(self):
+        """Install, uninstall, re-install — everything present at the end."""
+        run_setup(self.toolkit, self.tmp, "--apply")
+        run_setup(self.toolkit, self.tmp, "--uninstall", "--apply")
+        run_setup(self.toolkit, self.tmp, "--apply")
+
+        skill = self.home_path("skills", "test-skill")
+        hook = self.home_path("hooks", "test-hook.py")
+        self.assertTrue(skill.is_dir(), "Skill missing after round-trip")
+        self.assertTrue((skill / "SKILL.md").exists(), "Skill content missing after round-trip")
+        self.assertTrue(hook.exists(), "Hook missing after round-trip")
+
+    # -- Test 9: Idempotent install (no duplicate settings.json entries) --
+
+    def test_idempotent(self):
+        """Installing twice doesn't duplicate settings.json hook entries."""
+        run_setup(self.toolkit, self.tmp, "--apply")
+        run_setup(self.toolkit, self.tmp, "--apply")
+
+        settings = json.loads(self.home_path("settings.json").read_text())
+        post_hooks = settings.get("hooks", {}).get("PostToolUse", [])
+        # Count entries whose command matches our test hook
+        commands = [h.get("command", "") for e in post_hooks for h in e.get("hooks", [])]
+        managed = [c for c in commands if "test-hook.py" in c]
+        self.assertEqual(len(managed), 1, f"Duplicate entries: {managed}")
 
 
 if __name__ == "__main__":

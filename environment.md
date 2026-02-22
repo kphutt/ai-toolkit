@@ -11,25 +11,21 @@ Install method: symlinks (source files are never copied — changes via git pull
 | add-debug-logging | yes |
 | bootstrap | yes |
 | code-review | yes |
-| compliment | yes |
 | doc-gen | yes |
 | fix-issue | yes |
 | preflight | yes |
 | security-review | yes |
 | sync-env | yes |
 | tdd | yes |
-| commit | no — redundant with Claude Code built-in |
 
 ## Hooks
 
 | File | Install | Event | Matcher |
 |------|---------|-------|---------|
-| auto-format.sh | yes | PostToolUse | Write\|Edit |
-| log-tool-use.sh | yes | PostToolUse | _(none — all tools)_ |
-| pre-commit.sh | yes | PreToolUse | Bash |
-| protect-files.sh | yes | PreToolUse | Write\|Edit |
-| notify.sh | no — macOS only | | |
-| reinject-context.sh | no — unsupported event | | |
+| auto-format.py | yes | PostToolUse | Write\|Edit |
+| log-tool-use.py | yes | PostToolUse | _(none — all tools)_ |
+| pre-commit.py | yes | PreToolUse | Bash |
+| protect-files.py | yes | PreToolUse | Write\|Edit |
 
 ## Settings.json Hook Registrations
 
@@ -41,20 +37,20 @@ Sync adds these if missing. Never removes existing entries.
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
-        "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/protect-files.sh"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/protect-files.py"}]
       },
       {
         "matcher": "Bash",
-        "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/pre-commit.sh"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/pre-commit.py"}]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/auto-format.sh"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/auto-format.py"}]
       },
       {
-        "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/log-tool-use.sh"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/log-tool-use.py"}]
       }
     ]
   }
@@ -63,21 +59,8 @@ Sync adds these if missing. Never removes existing entries.
 
 ## Setup
 
-New machine: `git clone <repo> ~/dev/ai-toolkit && bash ~/dev/ai-toolkit/setup.sh --apply`
+New machine: `git clone <repo> ~/dev/ai-toolkit && python ~/dev/ai-toolkit/setup.py --apply`
 Subsequent updates: `git pull` (symlinks pick up changes automatically)
-Review state: `/sync-env` from Claude Code or `bash setup.sh` (dry-run)
+Review state: `/sync-env` from Claude Code or `python setup.py` (dry-run)
 
-Already deleted the repo? Clean up dangling symlinks:
-```bash
-find ~/.claude/skills ~/.claude/hooks -maxdepth 1 -type l ! -exec test -e {} \; -print -delete
-```
-
-## Not Installed
-
-| Component | Reason |
-|-----------|--------|
-| skills/commit | Redundant with Claude Code built-in |
-| hooks/notify.sh | macOS only (osascript) |
-| hooks/reinject-context.sh | Uses unsupported PreCompact event |
-| mcp-servers/* | Tutorial demo only |
-| agents/* | For Agent SDK batch use, not CLI sessions |
+To freeze copies instead of symlinks: `cp -r` the skill/hook directory, then `--uninstall`.

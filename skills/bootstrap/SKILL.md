@@ -70,7 +70,7 @@ Create a starter `CLAUDE.md` with:
 
 ## Docs
 
-This project follows the [project-docs convention](https://github.com/{user}/{repo}/blob/main/docs/): `ROADMAP.md` for big rocks, `docs/decisions/` for decision records.
+This project follows the project-docs convention: `ROADMAP.md` for big rocks, `docs/decisions/` for decision records.
 ```
 
 Fill in project name from the manifest file. If `CLAUDE.md` already exists, skip and tell the user.

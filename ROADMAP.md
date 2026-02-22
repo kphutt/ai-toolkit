@@ -2,7 +2,7 @@
 
 ## Next
 
-- **Skill orchestration** — Meta-skill that chains other skills (e.g., `/preflight` → `/commit` → push). Needs a way to pass context between skill invocations.
+- **Skill orchestration** — Meta-skill that chains other skills (e.g., `/preflight` → push). Needs a way to pass context between skill invocations.
 
 - **Cross-platform AI CLI support** — Adapt skills/hooks for Gemini CLI and OpenAI CLI alongside Claude Code. Identify shared abstractions vs. CLI-specific wiring.
 
