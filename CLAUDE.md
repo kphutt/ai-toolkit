@@ -100,6 +100,10 @@ Register servers in `.claude/settings.json` under `mcpServers`.
 
 Agent definitions live in `agents/<name>/`. Each has a `README.md` describing purpose, prompt, and usage. Agents are designed for batch/automated use via the Claude Agent SDK.
 
+## Project Docs Convention
+
+All repos follow the standard in [prompts/project-docs.md](prompts/project-docs.md): `ROADMAP.md` for big rocks, `docs/decisions/` for decision records, `docs/design/{initiative}/brainstorm.md` for optional design exploration.
+
 ## Style
 
 - Keep instructions concise — no filler, no motivation speeches
