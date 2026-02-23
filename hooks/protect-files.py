@@ -10,6 +10,7 @@ import sys
 
 
 def main():
+    """Block Write/Edit to .env, .pem, .key, and credentials files."""
     tool = os.environ.get("CLAUDE_TOOL_NAME", "")
     if tool not in ("Write", "Edit"):
         return 0

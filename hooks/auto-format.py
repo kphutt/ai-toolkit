@@ -36,6 +36,7 @@ FORMATTERS = {
 
 
 def main():
+    """Run the first available formatter on the file written/edited by Claude."""
     tool = os.environ.get("CLAUDE_TOOL_NAME", "")
     if tool not in ("Write", "Edit"):
         return 0

@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 def main():
+    """Append a timestamped line to ~/.claude/tool-use.log for each tool call."""
     log_file = Path.home() / ".claude" / "tool-use.log"
     tool = os.environ.get("CLAUDE_TOOL_NAME", "unknown")
     session = os.environ.get("CLAUDE_SESSION_ID", "no-session")

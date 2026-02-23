@@ -166,6 +166,7 @@ def remove_link(target: Path):
 
 
 def is_managed(target: Path, state: dict) -> bool:
+    """Return True if target is a toolkit-created link or recorded in state."""
     if _is_link(target):
         try:
             if str(TOOLKIT_DIR) in str(target.resolve()):
@@ -353,6 +354,7 @@ def safe_remove(target: Path, state: dict, dry_run: bool) -> bool:
 # ---------------------------------------------------------------------------
 
 def do_install(skills, hooks, expected_hooks, state, dry_run):
+    """Link skills and hooks into ~/.claude/ and merge settings.json entries."""
     print("Skills:")
     for name, install in skills:
         if not install:
@@ -390,6 +392,7 @@ def _iter_managed(subdir: str):
 
 
 def do_uninstall(state, dry_run, expected_hooks):
+    """Remove all toolkit-managed links and settings.json entries."""
     for label, subdir in [("Skills:", "skills"), ("Hooks:", "hooks")]:
         print(label)
         for entry in _iter_managed(subdir):
@@ -411,6 +414,7 @@ def do_uninstall(state, dry_run, expected_hooks):
 # ---------------------------------------------------------------------------
 
 def main():
+    """Parse CLI args and run install or uninstall."""
     parser = argparse.ArgumentParser(description="AI Toolkit setup")
     parser.add_argument("--uninstall", action="store_true")
     parser.add_argument("--apply", action="store_true", help="Make changes (default is dry-run)")

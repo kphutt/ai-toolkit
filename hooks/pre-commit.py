@@ -10,6 +10,7 @@ import sys
 
 
 def main():
+    """Block git push (without /preflight) and git commit --no-verify."""
     tool = os.environ.get("CLAUDE_TOOL_NAME", "")
     if tool != "Bash":
         return 0
