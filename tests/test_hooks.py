@@ -19,7 +19,7 @@ PYTHON = sys.executable
 
 
 def run_hook(hook_name: str, tool_name: str, stdin_data: dict,
-             env_extra: dict | None = None) -> subprocess.CompletedProcess:
+             env_extra: "dict | None" = None) -> subprocess.CompletedProcess:
     """Run a hook script with the given tool name and stdin JSON."""
     env = os.environ.copy()
     env["CLAUDE_TOOL_NAME"] = tool_name
