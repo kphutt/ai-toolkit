@@ -7,12 +7,27 @@ Dry-run by default. Use --apply to make changes.
 
 import argparse
 import json
+import logging
 import os
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Debug logging — enabled only with --debug, writes to debug.log
+# ---------------------------------------------------------------------------
+
+log = logging.getLogger("ai-toolkit")
+
+
+def _init_debug_logging():
+    """Configure file logging to debug.log (truncated each run)."""
+    handler = logging.FileHandler("debug.log", mode="w")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(message)s", datefmt="%H:%M:%S"))
+    log.addHandler(handler)
+    log.setLevel(logging.DEBUG)
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -290,6 +305,7 @@ def _merge_settings(mode: str, expected_hooks: dict, dry_run: bool):
 
     if changed and not dry_run:
         settings_file.write_text(json.dumps(settings, indent=2) + "\n")
+        log.debug("[SETTINGS] wrote %s", settings_file)
         print("  settings.json updated")
 
 
@@ -304,47 +320,57 @@ def safe_link(source: Path, target: Path, is_dir: bool, state: dict, dry_run: bo
     if _is_link(target):
         try:
             if str(TOOLKIT_DIR) in str(target.resolve()):
+                log.debug("[LINK] current name=%s target=%s", name, target)
                 print(f"  CURRENT: {name}")
                 return
         except OSError:
             pass
         if dry_run:
+            log.debug("[LINK] would-relink name=%s", name)
             print(f"  [dry-run] would re-link: {name}")
         else:
             remove_link(target)
             create_link(source, target, is_dir, state)
+            log.debug("[LINK] relinked name=%s source=%s", name, source)
             print(f"  RE-LINKED: {name}")
         return
 
     # Regular file/dir not in state → LOCAL (not ours, don't touch)
     if (target.is_dir() if is_dir else target.is_file()) and not _state_has(state, str(target)):
         kind = "directory" if is_dir else "file"
+        log.debug("[LINK] local name=%s kind=%s (not managed)", name, kind)
         print(f"  LOCAL: {name} (regular {kind} — not managed)")
         return
 
     # In state and exists → CURRENT (trust state file)
     if _state_has(state, str(target)) and target.exists():
+        log.debug("[LINK] current name=%s (in state)", name)
         print(f"  CURRENT: {name}")
         return
 
     # Doesn't exist → create
     if dry_run:
+        log.debug("[LINK] would-create name=%s source=%s", name, source)
         print(f"  [dry-run] would create: {name} -> {source}")
     else:
         create_link(source, target, is_dir, state)
+        log.debug("[LINK] created name=%s source=%s", name, source)
         print(f"  CREATED: {name}")
 
 
 def safe_remove(target: Path, state: dict, dry_run: bool) -> bool:
     """Remove target only if it was created by us. Returns True if removed."""
     if not is_managed(target, state):
+        log.debug("[LINK] skip-remove name=%s (not managed)", target.name)
         print(f"  SKIP (not managed): {target.name}")
         return False
     if dry_run:
+        log.debug("[LINK] would-remove name=%s", target.name)
         print(f"  [dry-run] would remove: {target.name}")
     else:
         remove_link(target)
         _state_remove(state, str(target))
+        log.debug("[LINK] removed name=%s", target.name)
         print(f"  REMOVED: {target.name}")
     return True
 
@@ -418,14 +444,22 @@ def main():
     parser = argparse.ArgumentParser(description="AI Toolkit setup")
     parser.add_argument("--uninstall", action="store_true")
     parser.add_argument("--apply", action="store_true", help="Make changes (default is dry-run)")
+    parser.add_argument("--debug", action="store_true", help="Write debug.log with diagnostic trace")
     args = parser.parse_args()
 
+    if args.debug:
+        _init_debug_logging()
+
     dry_run = not args.apply
+
+    log.debug("[INIT] toolkit=%s target=%s strategy=%s mode=%s",
+              TOOLKIT_DIR, TARGET_DIR, STRATEGY, "uninstall" if args.uninstall else ("apply" if args.apply else "dry-run"))
 
     print(f"\nAI Toolkit Setup ({'dry run' if dry_run else 'apply'})")
     print("=" * 40)
 
     if not MANIFEST.exists():
+        log.debug("[ERR] manifest not found: %s", MANIFEST)
         print(f"ERROR: Manifest not found: {MANIFEST}")
         sys.exit(1)
 
@@ -433,11 +467,15 @@ def main():
         TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
     _detect_strategy()
+    log.debug("[INIT] strategy=%s platform=%s", STRATEGY, sys.platform)
     if STRATEGY == "windows":
         print("Note: Using junctions + hard links (symlinks not available).\n")
 
     skills, hooks, expected_hooks = parse_manifest()
+    log.debug("[MANIFEST] skills=%d hooks=%d settings_hook_events=%d",
+              len(skills), len(hooks), len(expected_hooks))
     state = _state_load()
+    log.debug("[STATE] loaded entries=%d", len(state.get("entries", [])))
 
     if args.uninstall:
         do_uninstall(state, dry_run, expected_hooks)
@@ -447,9 +485,12 @@ def main():
     if not dry_run:
         if state["entries"]:
             _state_save(state)
+            log.debug("[STATE] saved entries=%d", len(state["entries"]))
         elif STATE_FILE.exists():
             STATE_FILE.unlink()
+            log.debug("[STATE] removed empty state file")
 
+    log.debug("[DONE] finished")
     print("Done.")
 
 

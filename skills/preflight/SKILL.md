@@ -25,6 +25,7 @@ Run each check and record the result as PASS, WARN, or FAIL.
   - Go: exported functions without a preceding `// FuncName` comment
   - Python: public functions/classes without docstrings
   - JS/TS: exported functions without JSDoc
+- **Skip** test files: don't flag test methods (`test_*`), unittest overrides (`setUp`, `tearDown`), or test classes
 - **FAIL** if no README, **WARN** if public functions lack docstrings, **PASS** otherwise
 
 ### 3. Test check
