@@ -1,17 +1,5 @@
 # Roadmap
 
-## Next
-
-- **Skill orchestration** — Meta-skill that chains other skills (e.g., `/preflight` → push). Needs a way to pass context between skill invocations.
-
-- **Cross-platform AI CLI support** — Adapt skills/hooks for Gemini CLI and OpenAI CLI alongside Claude Code. Identify shared abstractions vs. CLI-specific wiring.
-
-- **Mac ~/dev/ standardization** — Mirror the Windows `~/dev/` layout on macOS. Document any platform-specific setup steps (Homebrew, symlink behavior, shell differences).
-
----
-
-## Backlog
-
 - **`/hygiene` — Codebase entropy scanner** — Mechanical scan for dead code, doc drift, orphaned artifacts. Periodic audit, not pre-push. See [brainstorm](docs/design/hygiene/brainstorm.md).
 
 - **`/arch-review` — Architecture coherence review** — Top-down review for wrong boundaries, feature incoherence, pattern inconsistencies, tech stack misfits. The "bash calling python calling bash" detector. See [brainstorm](docs/design/arch-review/brainstorm.md).
