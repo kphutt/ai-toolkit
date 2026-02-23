@@ -17,3 +17,7 @@ Thumbs.db
 .env.*
 *.pem
 *.key
+
+# Build / logs
+dist/
+debug.log
