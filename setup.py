@@ -165,7 +165,9 @@ def create_link(source: Path, target: Path, is_dir: bool, state: dict):
 def remove_link(target: Path):
     """Remove a link or regular file/dir. Handles Windows junction removal."""
     if _is_link(target):
-        if target.is_dir():
+        if target.is_symlink():
+            target.unlink()
+        elif target.is_dir():
             # Windows junctions must be removed with rmdir, not unlink
             try:
                 os.rmdir(target)
