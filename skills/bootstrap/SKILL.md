@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Interactive new-project setup — debug logging, docs structure, gitignore, CLAUDE.md
+description: Interactive new-project setup — debug logging, docs structure, git hygiene, CLAUDE.md
 origin: personal
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill]
@@ -40,9 +40,11 @@ Follow the convention from `prompts/project-docs.md`:
 - Create `docs/decisions/` directory (empty)
 - Create `docs/design/` directory (brainstorms go here — one per initiative)
 
-### Step 3: Gitignore essentials
+### Step 3: Git hygiene
 
-Create or augment `.gitignore` with:
+**`.gitattributes`** — Create with `* text=auto` if it doesn't exist. This normalizes line endings across platforms.
+
+**`.gitignore`** — Create or augment with:
 
 - **Always include**: `.env`, `*.pem`, `*.key`, `debug.log`, `.DS_Store`, `Thumbs.db`
 - **Language-specific** (based on detection):
@@ -84,6 +86,6 @@ Bootstrap complete
 ==================
 [DONE] Debug logging — --debug flag added
 [SKIP] Project docs — skipped by user
-[DONE] Gitignore — .gitignore created with Python patterns
+[DONE] Git hygiene — .gitattributes + .gitignore created (Python patterns)
 [DONE] CLAUDE.md — scaffold created
 ```
