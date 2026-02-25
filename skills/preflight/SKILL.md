@@ -35,12 +35,13 @@ Run each check and record the result as PASS, WARN, or FAIL.
 - Flag source files that have no corresponding test file
 - **FAIL** if tests fail, **WARN** if untested source files exist, **PASS** if all tests pass
 
-### 4. Gitignore check
+### 4. Git hygiene check
 
+- Check if `.gitattributes` exists and contains `* text=auto`
 - Check if `debug.log` is tracked (`git ls-files debug.log`)
 - Check if `.env` is tracked (`git ls-files .env`)
 - Check if common build artifacts are tracked (`node_modules/`, `dist/`, `__pycache__/`, `target/`)
-- **FAIL** if any sensitive/build files are tracked, **PASS** otherwise
+- **FAIL** if any sensitive/build files are tracked, **WARN** if `.gitattributes` is missing or lacks `* text=auto`, **PASS** otherwise
 
 ### 5. Cleanup scan
 
@@ -121,7 +122,7 @@ Preflight Results
 =================
 [PASS] Secrets — no hardcoded secrets found
 [WARN] Docs — 2 public functions missing docstrings
-[FAIL] Gitignore — debug.log is tracked
+[FAIL] Git hygiene — debug.log is tracked
 [WARN] Security — 2 unsafe eval() calls found
 
 Result: 1 pass, 2 warn, 1 fail
