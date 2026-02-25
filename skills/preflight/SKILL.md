@@ -1,6 +1,6 @@
 ---
 name: preflight
-description: Pre-push quality checks — secrets, docs, tests, gitignore, cleanup, doc freshness, security
+description: Pre-push quality checks — secrets, docs, tests, git hygiene, cleanup, doc freshness, security
 origin: personal
 user-invocable: true
 allowed-tools: [Read, Grep, Glob, Bash]
