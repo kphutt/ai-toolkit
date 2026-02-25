@@ -6,8 +6,8 @@ Skills, hooks, and prompts that extend Claude Code. Installed via symlinks — `
 
 Invoked via `/skillname` in Claude Code.
 
-- `/bootstrap` — Interactive new-project setup (debug logging, docs, gitignore, CLAUDE.md)
-- `/preflight` — Pre-push quality checks (secrets, docs, tests, gitignore, cleanup, security)
+- `/bootstrap` — Interactive new-project setup (debug logging, docs, git hygiene, CLAUDE.md)
+- `/preflight` — Pre-push quality checks (secrets, docs, tests, git hygiene, cleanup, security)
 - `/add-debug-logging` — Add a `--debug` flag and structured file logging
 - `/sync-env` — Sync skills, hooks, and settings from ai-toolkit to ~/.claude
 - `/code-review` — Review code for bugs, clarity, edge cases, and security
