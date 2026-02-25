@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Interactive new-project setup — debug logging, docs structure, git hygiene, CLAUDE.md
+description: Interactive new-project setup — debug logging, docs, git hygiene, CLAUDE.md
 origin: personal
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill]
