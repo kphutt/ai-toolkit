@@ -1,6 +1,21 @@
 # AI Toolkit
 
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Skills, hooks, and prompts that extend Claude Code. Installed via symlinks — `git pull` updates everything.
+
+## Why This Exists
+
+LLM-assisted development increases entropy without guardrails. Models will push to main, overwrite protected files, skip tests, and commit secrets — not maliciously, but because nothing stops them. This toolkit is a local control layer: declarative skills define what the AI can do, hooks enforce what it can't.
+
+## Design Principles
+
+- **No push without preflight** — `pre-commit.py` blocks `git push` unless `/preflight` has run
+- **Sensitive files are write-protected** — `protect-files.py` blocks `.env`, `.pem`, `.key`, and credential files
+- **Every tool call is logged** — `log-tool-use.py` appends timestamp, session, and tool name to `~/.claude/tool-use.log`
+- **Dry-run by default** — `setup.py` previews all changes; `--apply` required to execute
+- **Non-invasive** — setup.py only manages its own symlinks, never touches files it didn't create
 
 ## Skills
 
@@ -32,8 +47,6 @@ python ~/dev/ai-toolkit/setup.py --apply   # install symlinks + settings.json en
 ```
 
 Subsequent updates: `git pull` (symlinks pick up changes automatically).
-
-setup.py only manages its own links — never touches files it didn't create. Dry-run by default.
 
 ```bash
 python setup.py                        # preview
