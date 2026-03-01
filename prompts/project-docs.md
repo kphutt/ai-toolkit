@@ -1,3 +1,5 @@
+<!-- Reference copy: kphutt/.github/README.md — keep in sync -->
+
 # Project docs convention
 
 Standard documentation structure for all repositories. One system, every project.
