@@ -1,5 +1,7 @@
 # AI Workflow Guide — Human-Readable Reference
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 A shareable document for people learning to work effectively with AI coding assistants. Practical guidance organized by topic, written in problem/solution format from real experience.
 
 **What this is:** A reference doc for humans — not CLAUDE.md rules (that's the [ai-conventions](../ai-conventions/brainstorm.md) initiative). Not a tutorial for a specific tool. Not a decision log (those go in docs/decisions/).

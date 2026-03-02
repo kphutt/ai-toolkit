@@ -1,5 +1,7 @@
 # /landscape — External Research and Industry Comparison
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 External research skill. Answers the questions that `/arch-review` raises by searching the web, GitHub, and official docs. Compares your approach against industry patterns, formal standards, and community practice. Slow by nature — requires web searching.
 
 **Why separate from arch-review:** Web research is slow (minutes, not seconds), noisy (lots of irrelevant results to filter), and requires different tools (WebSearch, WebFetch). Mixing it into arch-review would make a fast local analysis take 10x longer. Run arch-review first to identify questions, then landscape to answer them.

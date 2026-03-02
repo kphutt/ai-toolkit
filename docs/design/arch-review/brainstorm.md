@@ -1,5 +1,7 @@
 # /arch-review — Architecture Coherence Review
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 Step-back holistic review. Finds problems no single-file review catches: wrong abstraction boundaries, feature incoherence, pattern inconsistencies, tech stack misfits. This is the "bash calling python calling bash" detector.
 
 **Not code-review** (bottom-up: "is this function correct?"). Arch-review is top-down: "should this function exist? Is it in the right place?"

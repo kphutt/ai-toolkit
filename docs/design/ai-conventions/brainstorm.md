@@ -1,5 +1,7 @@
 # Portable AI Development Conventions
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 Turn lessons learned from AI-assisted development into a template of CLAUDE.md conventions that gets seeded into every new project. Same pattern as `prompts/project-docs.md` — a reusable template, not project-specific docs.
 
 **Two things, not one:**

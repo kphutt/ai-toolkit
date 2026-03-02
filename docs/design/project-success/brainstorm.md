@@ -1,5 +1,7 @@
 # /project-success — Project Success Factors Review
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 Evaluate what makes a project take off and stay useful. Not "what's broken" (that's /hygiene) or "is the architecture sound" (that's /arch-review), but "does this project have what it takes to succeed?"
 
 ## Core question

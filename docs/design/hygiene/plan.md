@@ -1,5 +1,7 @@
 # /hygiene — Implementation Plan
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 ## Context
 
 The ROADMAP's top item is `/hygiene` — a periodic codebase entropy scanner. A detailed brainstorm exists at `docs/design/hygiene/brainstorm.md` with 12 lenses, execution model, delta tracking, and report intelligence. This plan scopes a practical V1 that ships as a single SKILL.md, following existing skill patterns.

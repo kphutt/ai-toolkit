@@ -1,5 +1,7 @@
 # /hygiene — Codebase Entropy Scanner
 
+**Author**: Karsten Huttelmaier — co-authored with Claude
+
 Mechanical scan that finds dead code, doc drift, convention violations, and accumulated entropy. Produces a structured report with specific actions. Local-first, multi-lens, language-agnostic. Fast, run-it-often (weekly, after cleanups).
 
 **Not preflight** (pre-push gate for secrets/tests). Not code-review (per-file bug hunting). Hygiene is a periodic audit: "has entropy accumulated?"
