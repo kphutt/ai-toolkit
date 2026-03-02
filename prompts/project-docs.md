@@ -14,12 +14,14 @@ docs/
     0002-short-title.md
   design/
     {initiative}/
-      brainstorm.md                     # required scratchpad per initiative
+      brainstorm.md                     # required — exploration scratchpad
+      backlog.md                        # optional — phased plan for larger work
+      principles.md                     # optional — design laws for design-heavy features
 ```
 
 ## ROADMAP.md
 
-The PM view. Prioritized list of what's next. This *is* the backlog — no separate backlog file. Items are big rocks (features, refactors, architectural changes). Mark completed items with ~~strikethrough~~ and checkmark.
+The PM view. Prioritized list of what's next. This is the project-level backlog — no separate project-level backlog file. Items are big rocks (features, refactors, architectural changes). Mark completed items with ~~strikethrough~~ and checkmark. Initiative-level backlogs live in `docs/design/{initiative}/backlog.md` (see below).
 
 ## Decision records (`docs/decisions/`)
 
@@ -54,6 +56,21 @@ What follows from this — good, bad, and neutral.
 
 Required for every initiative. Dump sub-tasks, open questions, half-baked ideas, trade-off analysis before building. Messy by design. When something settles, it graduates to a decision record in `docs/decisions/`.
 
+## Initiative backlogs (`docs/design/{name}/backlog.md`)
+
+Optional — use when an initiative has multiple phases that ship independently. Each phase has:
+
+- **Goal** — one sentence, what the user gets
+- **What's in scope** — bullet list of concrete deliverables
+- **What's NOT in scope** — explicit boundaries (prevents scope creep)
+- **Done when** — acceptance criteria
+
+Mark completed phases with ~~strikethrough~~. A contributor should be able to pick up the next phase cold by reading the backlog without needing prior context.
+
+## Initiative principles (`docs/design/{name}/principles.md`)
+
+Optional — use for design-heavy features where multiple decisions share underlying rules. Immutable design laws that the team commits to (e.g., "No UI state in the database", "Every action is reversible"). Skip for small or incremental work.
+
 ## Lifecycle
 
 ```
@@ -62,7 +79,7 @@ ROADMAP.md item → brainstorm → decisions → code
 
 ## What NOT to do
 
-- No separate backlog file — the roadmap is the backlog
+- No project-level backlog file — the roadmap is the project backlog (initiative-level backlogs in `docs/design/` are encouraged for phased work)
 - No decisions inside initiative folders — they're project-wide, not initiative-scoped
 - No formal RFC process for solo/small team work — that's for collecting feedback from others
 - No maintaining a decision index file — `ls docs/decisions/` is the index
