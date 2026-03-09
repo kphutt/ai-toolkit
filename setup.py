@@ -197,14 +197,15 @@ def is_managed(target: Path, state: dict) -> bool:
 # Manifest parser — single pass, also extracts settings.json hook block
 # ---------------------------------------------------------------------------
 
-def parse_manifest() -> tuple[list, list, dict]:
-    """Return (skills, hooks, settings_hooks).
+def parse_manifest() -> tuple[list, list, dict, list]:
+    """Return (skills, hooks, settings_hooks, files).
 
     skills/hooks: [(name, install_bool), ...]
     settings_hooks: the parsed JSON "hooks" dict from the ```json block, or {}
+    files: [(source_rel, target_path, install_bool), ...]
     """
     text = MANIFEST.read_text()
-    skills, hooks = [], []
+    skills, hooks, files = [], [], []
     settings_hooks = {}
 
     current_table = None
@@ -216,16 +217,26 @@ def parse_manifest() -> tuple[list, list, dict]:
         if s.startswith("| File") and "Event" in s:
             current_table = "hooks"
             continue
+        if s.startswith("| Source") and "Target" in s:
+            current_table = "files"
+            continue
         if current_table and s.startswith("|---"):
             continue
         if current_table and s.startswith("|"):
             parts = [p.strip() for p in s.strip("|").split("|")]
-            name = parts[0].strip()
-            install = parts[1].strip().lower().startswith("yes")
             if current_table == "skills":
+                name = parts[0].strip()
+                install = parts[1].strip().lower().startswith("yes")
                 skills.append((name, install))
-            else:
+            elif current_table == "hooks":
+                name = parts[0].strip()
+                install = parts[1].strip().lower().startswith("yes")
                 hooks.append((name, install))
+            elif current_table == "files":
+                source_rel = parts[0].strip()
+                target_path = parts[1].strip()
+                install = parts[2].strip().lower().startswith("yes")
+                files.append((source_rel, target_path, install))
         elif current_table and not s.startswith("|"):
             current_table = None
 
@@ -237,7 +248,7 @@ def parse_manifest() -> tuple[list, list, dict]:
         except json.JSONDecodeError:
             pass
 
-    return skills, hooks, settings_hooks
+    return skills, hooks, settings_hooks, files
 
 
 # ---------------------------------------------------------------------------
@@ -381,8 +392,8 @@ def safe_remove(target: Path, state: dict, dry_run: bool) -> bool:
 # Modes
 # ---------------------------------------------------------------------------
 
-def do_install(skills, hooks, expected_hooks, state, dry_run):
-    """Link skills and hooks into ~/.claude/ and merge settings.json entries."""
+def do_install(skills, hooks, expected_hooks, files, state, dry_run):
+    """Link skills, hooks, and files; merge settings.json entries."""
     print("Skills:")
     for name, install in skills:
         if not install:
@@ -409,6 +420,19 @@ def do_install(skills, hooks, expected_hooks, state, dry_run):
     _merge_settings("install", expected_hooks, dry_run)
     print()
 
+    print("Files:")
+    for source_rel, target_path, install in files:
+        if not install:
+            continue
+        src = TOOLKIT_DIR / source_rel
+        tgt = Path(os.path.expanduser(target_path))
+        if not src.exists():
+            print(f"  WARNING: source not found: {src}")
+            continue
+        is_dir = src.is_dir()
+        safe_link(src, tgt, is_dir=is_dir, state=state, dry_run=dry_run)
+    print()
+
 
 def _iter_managed(subdir: str):
     """Yield entry paths in a target subdirectory."""
@@ -419,7 +443,7 @@ def _iter_managed(subdir: str):
         yield entry
 
 
-def do_uninstall(state, dry_run, expected_hooks):
+def do_uninstall(state, dry_run, expected_hooks, files):
     """Remove all toolkit-managed links and settings.json entries."""
     for label, subdir in [("Skills:", "skills"), ("Hooks:", "hooks")]:
         print(label)
@@ -429,6 +453,12 @@ def do_uninstall(state, dry_run, expected_hooks):
 
     print("Settings.json:")
     _merge_settings("uninstall", expected_hooks, dry_run)
+    print()
+
+    print("Files:")
+    for source_rel, target_path, install in files:
+        tgt = Path(os.path.expanduser(target_path))
+        safe_remove(tgt, state, dry_run)
     print()
 
     if not state["entries"] and not dry_run:
@@ -473,16 +503,16 @@ def main():
     if STRATEGY == "windows":
         print("Note: Using junctions + hard links (symlinks not available).\n")
 
-    skills, hooks, expected_hooks = parse_manifest()
-    log.debug("[MANIFEST] skills=%d hooks=%d settings_hook_events=%d",
-              len(skills), len(hooks), len(expected_hooks))
+    skills, hooks, expected_hooks, files = parse_manifest()
+    log.debug("[MANIFEST] skills=%d hooks=%d settings_hook_events=%d files=%d",
+              len(skills), len(hooks), len(expected_hooks), len(files))
     state = _state_load()
     log.debug("[STATE] loaded entries=%d", len(state.get("entries", [])))
 
     if args.uninstall:
-        do_uninstall(state, dry_run, expected_hooks)
+        do_uninstall(state, dry_run, expected_hooks, files)
     else:
-        do_install(skills, hooks, expected_hooks, state, dry_run)
+        do_install(skills, hooks, expected_hooks, files, state, dry_run)
 
     if not dry_run:
         if state["entries"]:

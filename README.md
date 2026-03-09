@@ -24,7 +24,7 @@ Invoked via `/skillname` in Claude Code.
 - `/bootstrap` — Interactive new-project setup (debug logging, docs, git hygiene, CLAUDE.md)
 - `/preflight` — Pre-push quality checks (secrets, docs, tests, git hygiene, cleanup, security)
 - `/add-debug-logging` — Add a `--debug` flag and structured file logging
-- `/sync-env` — Sync skills, hooks, and settings from ai-toolkit to ~/.claude
+- `/sync-env` — Sync skills, hooks, settings, and files from ai-toolkit
 - `/code-review` — Review code for bugs, clarity, edge cases, and security
 - `/doc-gen` — Generate or update documentation for files or directories
 - `/fix-issue` — Read a GitHub issue, implement a fix, write tests
@@ -40,18 +40,29 @@ Invoked via `/skillname` in Claude Code.
 
 ## Setup
 
+### New machine
 ```bash
 git clone <repo> ~/dev/ai-toolkit
-python ~/dev/ai-toolkit/setup.py           # preview — changes nothing
-python ~/dev/ai-toolkit/setup.py --apply   # install symlinks + settings.json entries
+python ~/dev/ai-toolkit/setup.py --apply
 ```
 
-Subsequent updates: `git pull` (symlinks pick up changes automatically).
+This installs skills, hooks, settings.json entries, and shared files (like `~/dev/CLAUDE.md`).
 
+### Check if anything is missing
+From Claude Code: `/sync-env`
+From terminal: `python ~/dev/ai-toolkit/setup.py`
+
+### After pulling updates
+`git pull` is usually enough — symlinks pick up changes automatically.
+Run `/sync-env` if you added new skills, hooks, or files to `environment.md`.
+
+### What /sync-env does
+Runs setup.py, shows what's current/missing/stale, and offers to fix it.
+All logic lives in setup.py.
+
+### Clean removal
 ```bash
-python setup.py                        # preview
-python setup.py --apply                # install
-python setup.py --uninstall --apply    # clean removal
+python setup.py --uninstall --apply
 ```
 
 ## License

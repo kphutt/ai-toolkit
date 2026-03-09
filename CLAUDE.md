@@ -8,6 +8,7 @@ Personal toolkit for Claude Code extensibility: skills, hooks, and prompts.
 skills/          # Invocable skills for Claude Code
 hooks/           # Python scripts triggered by Claude Code events
 prompts/         # Reusable prompt templates
+files/           # Standalone files symlinked to arbitrary locations
 ```
 
 ## Skills
@@ -85,7 +86,17 @@ The toolkit uses symlinks to install skills and hooks into `~/.claude/`. This me
 - **`setup.py`** — Core setup logic (Python). Handles cross-platform link creation, JSON state file, settings.json merge. Dry-run by default, `--apply` to execute. Supports `--uninstall` and `--debug` (writes `debug.log` with diagnostic trace). Hook registrations are parsed from `environment.md`'s JSON block (not hardcoded).
 - **`tests/test_setup.py`** — Invariant tests (`python tests/test_setup.py`).
 - **`tests/test_hooks.py`** — Hook tests (`python tests/test_hooks.py`).
-- **`/sync-env`** — Claude Code skill that reads the manifest, reports current state, and offers to fix missing symlinks/settings entries.
+- **`/sync-env`** — Claude Code skill that runs setup.py, shows a report, and offers to apply fixes.
+  Wraps setup.py — all logic lives there.
+
+### Files
+
+The `files/` directory contains standalone files that get symlinked to arbitrary
+locations (not just ~/.claude/). Declared in the Files table in environment.md.
+Example: `files/CLAUDE-shared.md` → `~/dev/CLAUDE.md`.
+
+Since targets are symlinks, editing the target file directly modifies the source
+in ai-toolkit. Changes show up in `git diff` and can be committed/pushed.
 
 ### Safety invariant
 

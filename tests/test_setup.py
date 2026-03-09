@@ -253,5 +253,83 @@ class TestSetup(unittest.TestCase):
         self.assertEqual(len(managed), 1, f"Duplicate entries: {managed}")
 
 
+    # -- Test 10: Files section creates link --
+
+    def test_files_section_creates_link(self):
+        """Files table entries are symlinked to arbitrary target paths."""
+        # Create a file in the toolkit's files/ directory
+        (self.toolkit / "files").mkdir()
+        (self.toolkit / "files" / "test.md").write_text("hello from files")
+
+        # Add Files table to environment.md
+        target = self.tmp / "target.md"
+        env = (self.toolkit / "environment.md").read_text()
+        env += f"""
+## Files
+| Source | Target | Install |
+|--------|--------|---------|
+| files/test.md | {target} | yes |
+"""
+        (self.toolkit / "environment.md").write_text(env)
+
+        run_setup(self.toolkit, self.tmp, "--apply")
+
+        self.assertTrue(target.is_symlink(), "File link not created")
+        self.assertEqual(target.read_text(), "hello from files")
+
+        # Check state file records the entry
+        state_file = self.tmp / ".claude" / ".ai-toolkit-managed.json"
+        state = json.loads(state_file.read_text())
+        targets = [e["target"] for e in state["entries"]]
+        self.assertIn(str(target), targets)
+
+    # -- Test 11: Files uninstall removes managed --
+
+    def test_files_uninstall_removes_managed(self):
+        """Uninstall removes file links created by setup."""
+        (self.toolkit / "files").mkdir()
+        (self.toolkit / "files" / "test.md").write_text("hello")
+
+        target = self.tmp / "target.md"
+        env = (self.toolkit / "environment.md").read_text()
+        env += f"""
+## Files
+| Source | Target | Install |
+|--------|--------|---------|
+| files/test.md | {target} | yes |
+"""
+        (self.toolkit / "environment.md").write_text(env)
+
+        run_setup(self.toolkit, self.tmp, "--apply")
+        self.assertTrue(target.exists(), "File link not created for uninstall test")
+
+        run_setup(self.toolkit, self.tmp, "--uninstall", "--apply")
+        self.assertFalse(target.exists(), "File link not removed by uninstall")
+
+    # -- Test 12: Files preserves local (non-managed) --
+
+    def test_files_preserves_local(self):
+        """Install doesn't overwrite a regular file at the target path."""
+        (self.toolkit / "files").mkdir()
+        (self.toolkit / "files" / "test.md").write_text("toolkit version")
+
+        target = self.tmp / "target.md"
+        target.write_text("local version")
+
+        env = (self.toolkit / "environment.md").read_text()
+        env += f"""
+## Files
+| Source | Target | Install |
+|--------|--------|---------|
+| files/test.md | {target} | yes |
+"""
+        (self.toolkit / "environment.md").write_text(env)
+
+        run_setup(self.toolkit, self.tmp, "--apply")
+
+        self.assertFalse(target.is_symlink(), "Local file was replaced with symlink")
+        self.assertEqual(target.read_text(), "local version")
+
+
 if __name__ == "__main__":
     unittest.main()

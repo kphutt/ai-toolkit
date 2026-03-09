@@ -1,54 +1,32 @@
 ---
 name: sync-env
-description: Sync skills, hooks, and settings from ai-toolkit to ~/.claude
+description: Sync skills, hooks, settings, and files from ai-toolkit
 origin: personal
 user-invocable: true
-allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
+allowed-tools: [Read, Bash, Glob, Grep]
 argument-hint: "[path-to-ai-toolkit]"
 ---
 
-Sync the ai-toolkit environment manifest to `~/.claude/`. Check the state of all skills, hooks, and settings.json registrations, show a report, and offer to fix any issues.
+Sync the ai-toolkit environment to the local machine. This skill wraps setup.py —
+all installation logic lives there.
 
 ## Algorithm
 
-1. **Find manifest.** Use the argument as the toolkit path, or default to `~/dev/ai-toolkit`. Read `environment.md` from that path. If not found, print a clear error and stop.
+1. **Find toolkit.** Use the argument as the toolkit path, or default to `~/dev/ai-toolkit`.
+   Verify `environment.md` and `setup.py` exist. If not found, print a clear error and stop.
 
-2. **Ensure target directories exist.** Create `~/.claude/skills/` and `~/.claude/hooks/` if missing.
+2. **Run dry-run.** Execute: `python3 <toolkit>/setup.py`
+   This shows the current state of all skills, hooks, settings, and files without changing anything.
 
-3. **Check each skill** (where Install = yes in the manifest):
-   - Target doesn't exist → **MISSING**
-   - Target is a symlink to the correct source → **CURRENT**
-   - Target is a symlink to wrong source → **RELINK** (stale symlink)
-   - Target is a regular file/directory → **LOCAL** (not managed, won't touch)
+3. **Show the report** to the user. Summarize: how many CURRENT, how many would be created/relinked,
+   any LOCAL items (which are never touched).
 
-4. **Check each hook** (where Install = yes):
-   - Same logic as skills.
+4. **If everything is CURRENT**, print "All synced." and stop.
 
-5. **Check settings.json registrations:**
-   - Read `~/.claude/settings.json`
-   - For each hook registration in the manifest's "Settings.json Hook Registrations" section:
-     - Present in settings.json → **CURRENT**
-     - Missing → **MISSING**
+5. **If there are items to fix**, ask the user: "Apply fixes? This will create/update symlinks
+   and add missing settings.json entries. LOCAL items are never touched."
 
-6. **Show report** — one line per item:
-   ```
-   Environment Sync Report
-   =======================
-   Skills:   CURRENT add-debug-logging | MISSING sync-env | LOCAL preflight
-   Hooks:    CURRENT auto-format.py | MISSING pre-commit.py
-   Settings: CURRENT PreToolUse:protect-files.py | MISSING PostToolUse:log-tool-use.py
+6. **Apply.** Execute: `python3 <toolkit>/setup.py --apply`
+   Show the output.
 
-   Summary: 8 current, 2 missing, 1 local
-   ```
-
-7. **If everything is CURRENT**, print "All synced." and stop.
-
-8. **If there are MISSING or RELINK items**, ask the user: "Apply fixes? This will create/update symlinks and add missing settings.json entries. LOCAL items are never touched."
-
-9. **Apply fixes** (only after user confirms):
-   - For MISSING skills/hooks: create symlinks from `~/.claude/<type>/<name>` → `<toolkit>/<type>/<name>`
-   - For RELINK: remove old symlink, create new one
-   - For settings.json MISSING entries: read the current file, add the missing hook registrations (merge — never remove existing entries), write back with atomic temp-file + rename
-   - Never touch LOCAL items
-
-10. **Post-apply note:** "New skills take effect next session. Hook changes are immediate."
+7. **Post-apply note:** "New skills take effect next session. Hook changes and file links are immediate."

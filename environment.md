@@ -57,9 +57,18 @@ Sync adds these if missing. Never removes existing entries.
 }
 ```
 
+## Files
+
+Arbitrary symlinks managed by setup. Source paths relative to toolkit root. Target paths support ~.
+
+| Source | Target | Install |
+|--------|--------|---------|
+| files/CLAUDE-shared.md | ~/dev/CLAUDE.md | yes |
+
 ## Setup
 
 New machine: `git clone <repo> ~/dev/ai-toolkit && python ~/dev/ai-toolkit/setup.py --apply`
+This installs skills, hooks, settings.json entries, and file links (like ~/dev/CLAUDE.md).
 Subsequent updates: `git pull` (symlinks pick up changes automatically)
 Review state: `/sync-env` from Claude Code or `python setup.py` (dry-run)
 
