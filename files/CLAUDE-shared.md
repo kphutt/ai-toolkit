@@ -18,6 +18,15 @@
 - Proactively suggest /sync-env once at the start of longer sessions or when switching machines
 - /sync-env runs setup.py to check and fix ai-toolkit symlinks — it's fast and non-destructive
 
+## Project Dashboard
+
+- The Active Projects table in `~/dev/kphutt/README.md` is the cross-project status dashboard.
+- When wrapping up meaningful work on any project (feature complete, phase change, milestone hit),
+  update the Phase and Next Action columns in README.md. Commit and push kphutt.
+- When the user asks "where am I?" or "get up to speed", read kphutt/README.md first for a fast overview,
+  then dig into specific repos as needed.
+- Keep it concise — one line per project, current phase + next concrete action.
+
 ## Plan Mode Preferences
 - In plan files, put stable content (context, file list) at the top and actively changing content
   (open questions, active discussion) at the bottom — so edits happen near where the user is reading
